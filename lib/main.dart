@@ -1,36 +1,112 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// We create a "provider", which will store a value (here "Hello world").
-// By using a provider, this allows us to mock/override the value exposed.
-final helloWorldProvider = Provider((_) => 'Hello world');
+final animationFlagProvider = StateProvider((ref) => false);
+final animationParamaterProvider = StateProvider((ref) => 0);
 
 void main() {
-  runApp(
-    // For widgets to be able to read providers, we need to wrap the entire
-    // application in a "ProviderScope" widget.
-    // This is where the state of our providers will be stored.
-    ProviderScope(
-      child: MyApp(),
-    ),
-  );
+  runApp(ProviderScope(child: MyApp()));
 }
 
-// Note: MyApp is a HookConsumerWidget, from flutter_hooks.
-class MyApp extends HookConsumerWidget {
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Animation Test',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: AnimationTest(),
+    );
+  }
+}
+
+class AnimationTest extends ConsumerWidget {
+  const AnimationTest({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // To read our provider, we can use the hook "ref.watch(".
-    // This is only possible because MyApp is a HookConsumerWidget.
-    final String value = ref.watch(helloWorldProvider);
-
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(title: Text('Example')),
-        body: Center(
-          child: Text(value),
-        ),
+    return Material(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 400,
+            height: 400,
+            child: Stack(
+              children: <Widget>[
+                Positioned(
+                  width: 50.0,
+                  height: 50.0,
+                  left: 100 *
+                          cos(4 *
+                              ref
+                                  .watch(animationParamaterProvider.notifier)
+                                  .state *
+                              pi /
+                              180) +
+                      200,
+                  top: 100 *
+                          sin(4 *
+                              ref
+                                  .watch(animationParamaterProvider.notifier)
+                                  .state *
+                              pi /
+                              180) +
+                      200,
+                  child: Container(
+                    color: Colors.blue,
+                  ),
+                ),
+                Positioned(
+                  width: 50.0,
+                  height: 50.0,
+                  left: 100 *
+                          cos(5 *
+                              ref
+                                  .watch(animationParamaterProvider.notifier)
+                                  .state *
+                              pi /
+                              180) +
+                      200,
+                  top: 100 *
+                          sin(5 *
+                              ref
+                                  .watch(animationParamaterProvider.notifier)
+                                  .state *
+                              pi /
+                              180) +
+                      200,
+                  child: Container(
+                    color: Colors.red,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            margin: EdgeInsets.only(bottom: 200),
+            child: ElevatedButton(
+              onPressed: () async {
+                print(ref.read(animationFlagProvider.notifier).state);
+                ref.read(animationFlagProvider.notifier).state =
+                    !ref.watch(animationFlagProvider.notifier).state;
+                while (ref.watch(animationFlagProvider.notifier).state) {
+                  //print(1);
+                  ref.watch(animationParamaterProvider);
+                  ref.watch(animationParamaterProvider.notifier).state++;
+                  await Future.delayed(Duration(milliseconds: 1));
+                }
+              },
+              child: Container(
+                color: Colors.blue,
+                child: const Center(child: Text('Tap me')),
+              ),
+            ),
+          )
+        ],
       ),
     );
   }
